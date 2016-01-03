@@ -118,7 +118,7 @@ if __name__ == '__main__':
   #数据库连接参数  
   dbconfig = {'host':'localhost', 
         'port': 3306, 
-        'user':'admin', 
+        'user':'root', 
         'passwd':'admin', 
         'db':'szu1983', 
         'charset':'utf8'}
