@@ -68,16 +68,32 @@ class MySQL:
       result = False
     return result
     
-  def insert(self,sql):
-    u'执行 INSERT 语句。如主键为自增长int，则返回新生成的ID'
+  def insert(self,p_table_name,p_data):
+    for key in p_data:
+      p_data[key] = "'"+str(p_data[key])+"'"
+    key   = ','.join(p_data.keys())
+    value = ','.join(p_data.values())
+    real_sql = "INSERT INTO " + p_table_name + " (" + key + ") VALUES (" + value + ")"
+    #self.query("set names 'utf8'")
+    # print real_sql
     try:
-      self._cur.execute("SET NAMES utf8")
-      self._cur.execute(sql)
+      result = self.query(real_sql)
       self._conn.commit()
-      return self._conn.insert_id()
     except MySQLdb.Error, e:
       self.error_code = e.args[0]
-      return False
+      print "数据库错误代码:",e.args[0],e.args[1]
+      result = False
+    return result
+  # def insert(self,sql):
+  #   u'执行 INSERT 语句。如主键为自增长int，则返回新生成的ID'
+  #   try:
+  #     self._cur.execute("SET NAMES utf8")
+  #     self._cur.execute(sql)
+  #     self._conn.commit()
+  #     return self._conn.insert_id()
+  #   except MySQLdb.Error, e:
+  #     self.error_code = e.args[0]
+  #     return False
   
   def fetchAllRows(self):
     u'返回结果列表'

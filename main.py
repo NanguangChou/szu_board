@@ -6,8 +6,10 @@ from mysqlhelper import MySQL
 from pyquery import PyQuery as pq
 import cookielib
 import time
-
 import logging
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
 def setLog(log_message):
 	log_filename = '/tmp/szu_board.log'
 	logger=logging.getLogger()
@@ -30,16 +32,18 @@ def strQ2B(ustring):
         rstring += unichr(inside_code)
     return rstring
 
+
+
 def main():
 	#数据库连接参数  
-	dbconfig = {'host':'hostname', 
+	dbconfig = {'host':'localhost', 
 		'port': 3306, 
 		'user':'root', 
-		'passwd':'username', 
-		'db':'szu', 
+		'passwd':'admin', 
+		'db':'szu1983', 
 		'charset':'utf8'}
 
-	# db = MySQL(dbconfig)
+	db = MySQL(dbconfig)
 	# sql = 'select * from `board`'
 	# db.query(sql)
 
@@ -63,11 +67,15 @@ def main():
 	result = result.read()
 	dollar = pq(result)
 	mes_list =  dollar('.tbcolor13').parent().children()
-	for i in range(2,5):#):
+	k=0;
+	for i in range(2,mes_list.length):#):
 		ele = mes_list.eq(i).find('td')
 		insertdata = {}
+		insertdata['category'] = ele.eq(1).text()
 		insertdata['title'] = ele.eq(3).find('a').text()
-		insertdata['top'] = ele.eq(3).find('b').length
+		toptext = ele.eq(3).find('font').text()
+		insertdata['top'] = bool(toptext[0:4]==u'|置顶|') and 1 or 0
+		print insertdata['top']
 		inner_link = ele.eq(3).find('a').attr('href')
 		if not(inner_link):
 			continue
@@ -101,16 +109,31 @@ def main():
 			lastEdit   = int(time.mktime(time.strptime(lastEdit,'%Y-%m-%d %H:%M:%S')))
 			insertdata['lastEdit'] = lastEdit
 
-		sql = 'delete from `board` where `id`='+insertdata['id']
-		
-		print insertdata['lastEdit']
-		print insertdata['attachments']
-		print insertdata['id']
-		print insertdata['date']
-		print insertdata['author']
+		id = insertdata['id']
+		category = insertdata['category']
+		lastEdit = insertdata['lastEdit']
+		fujian = insertdata['attachments']
+		attachments = '['
+		for i in range(0,len(fujian)):
+			attachments = attachments +'"'+ fujian[i]+'"'
+		attachments = attachments+']'
+		# print attachments
+		insertdata['attachments'] = attachments
+		date = insertdata['date']
+		author = insertdata['author']
+		title = insertdata['title']
+		top = insertdata['top']
+		content = insertdata['content']
+		# print str(content)
+		sql = 'delete from `board` where `id`='+id
+		db.query(sql)
+		db.insert('board', insertdata)
+		# print sql2
+		# db.query(sql2)
 		print insertdata['title']
-		print ''
-
+		k= k+1;
+		print 'sql query '+str(k)+' succeed'
+	db.close()
 def easy_curl(url,data=''):
 	send_headers = {
 		'Host':'www.szu.edu.cn',
