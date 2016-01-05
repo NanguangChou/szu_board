@@ -8,6 +8,8 @@ import cookielib
 import time
 import logging
 import sys
+import cgi
+import re
 reload(sys)
 sys.setdefaultencoding('utf-8')
 def setLog(log_message):
@@ -41,7 +43,8 @@ def main():
 		'user':'root', 
 		'passwd':'admin', 
 		'db':'szu1983', 
-		'charset':'utf8'}
+		'charset':'utf8'
+	}
 
 	db = MySQL(dbconfig)
 	# sql = 'select * from `board`'
@@ -84,11 +87,20 @@ def main():
 		content = easy_curl(inner_link).read()
 		inner_dollar = pq(content)
 		inner_ele = inner_dollar('.fontcolor3').eq(1)
-		insertdata['title'] = inner_ele.find('font').text()
-		insertdata['content'] = inner_ele.parent().next().next().children().eq(0).html()
+		temp = inner_ele.find('font').eq(0).text().split(' ')
+		if(len(temp)>1 and temp[0]!=temp[1]):
+			title = temp[0]+temp[1]
+		else:
+			title = temp[0] 
+		insertdata['title'] = title
 		#存日期和发文单位
-		author_date = inner_ele.parent().next().find('font').text()
+		pattern = re.compile(r'\<font color=#808080\>(.*)\<\/font\>')
+		result = pattern.findall(content)
+		print result[0].decode('gbk').encode('utf-8')
+		author_date = result[0].decode('gbk')
+
 		author_date = strQ2B(author_date).split(' ')
+
 		date_str    = author_date[1]+' '+author_date[2]
 		date        = int(time.mktime(time.strptime(date_str,'%Y-%m-%d %H:%M:%S')))
 		insertdata['date'] = date
@@ -109,6 +121,12 @@ def main():
 			lastEdit   = int(time.mktime(time.strptime(lastEdit,'%Y-%m-%d %H:%M:%S')))
 			insertdata['lastEdit'] = lastEdit
 
+		new_dom   =  inner_ele.parent().next().next().children().eq(0)
+		clean_dom =  new_dom.find('*')
+		for item in clean_dom:
+			pq(item).attr('style','')
+			pq(item).attr('class','')
+		insertdata['content'] = (new_dom.html())
 		id = insertdata['id']
 		category = insertdata['category']
 		lastEdit = insertdata['lastEdit']

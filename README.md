@@ -18,3 +18,4 @@ mysql 设置<br/>
 - `MYSQL_DB`  MYSQL数据库
 - `MYSQL_CHAR`  MYSQL数据库字符集
 
+## 项目雪崩，pyquery的采集会丢失标签
