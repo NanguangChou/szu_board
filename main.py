@@ -5,13 +5,11 @@ import urllib2
 from mysqlhelper import MySQL
 from pyquery import PyQuery as pq
 import cookielib
-import time
-import logging
-import sys
-import cgi
 import re
-reload(sys)
-sys.setdefaultencoding('utf-8')
+import time
+
+debug = True
+
 def setLog(log_message):
 	log_filename = '/tmp/szu_board.log'
 	logger=logging.getLogger()
@@ -41,12 +39,12 @@ def main():
 	dbconfig = {'host':'localhost', 
 		'port': 3306, 
 		'user':'root', 
-		'passwd':'admin', 
+		'passwd':'', 
 		'db':'szu1983', 
 		'charset':'utf8'
 	}
-
-	db = MySQL(dbconfig)
+	if not(debug):
+		db = MySQL(dbconfig)
 	# sql = 'select * from `board`'
 	# db.query(sql)
 
@@ -71,7 +69,7 @@ def main():
 	dollar = pq(result)
 	mes_list =  dollar('.tbcolor13').parent().children()
 	k=0;
-	for i in range(2,mes_list.length):#):
+	for i in range(2,10):#mes_list.length):#):
 		ele = mes_list.eq(i).find('td')
 		insertdata = {}
 		insertdata['category'] = ele.eq(1).text()
@@ -143,15 +141,22 @@ def main():
 		top = insertdata['top']
 		content = insertdata['content']
 		# print str(content)
-		sql = 'delete from `board` where `id`='+id
-		db.query(sql)
-		db.insert('board', insertdata)
-		# print sql2
-		# db.query(sql2)
-		print insertdata['title']
-		k= k+1;
-		print 'sql query '+str(k)+' succeed'
-	db.close()
+		if not(debug):
+
+			sql = 'delete from `board` where `id`='+id
+			db.query(sql)
+			db.insert('board', insertdata)
+			# print sql2
+			# db.query(sql2)
+			print insertdata['title']
+			k= k+1;
+			print 'sql query '+str(k)+' succeed'
+
+		else: 
+			del insertdata['content']
+			for item in insertdata:
+				print insertdata[item]
+		
 def easy_curl(url,data=''):
 	send_headers = {
 		'Host':'www.szu.edu.cn',
